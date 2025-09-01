@@ -10,15 +10,12 @@ permissions:
 
 jobs:
   build-and-push:
-    name: Build and Push Docker Image
     runs-on: ubuntu-latest
     
     steps:
-    # Step 1: Checkout the code
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # Step 2: Log in to GitHub Container Registry
     - name: Log in to GHCR
       uses: docker/login-action@v3
       with:
@@ -26,25 +23,11 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    # Step 3: Extract metadata for Docker (tags, labels)
-    - name: Extract Docker metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: |
-          ghcr.io/${{ github.repository }}
-        tags: |
-          type=sha,prefix=,suffix=,enable=true
-          type=ref,event=branch
-          type=ref,event=pr
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-
-    # Step 4: Build and push Docker image
     - name: Build and push
       uses: docker/build-push-action@v5
       with:
         context: .
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+        tags: |
+          ghcr.io/${{ github.repository }}:latest
+          ghcr.io/${{ github.repository }}:${{ github.sha }}

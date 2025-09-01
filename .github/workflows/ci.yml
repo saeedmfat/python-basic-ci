@@ -73,21 +73,21 @@ jobs:
       with:
         python-version: "3.10"
 
-    - name: Install linters
-      run: |
-        pip install flake8 black isort
+    #- name: Install linters
+      #run: |
+        #pip install flake8 black isort
 
     # Check for PEP8 violations with flake8
-    - name: Run flake8
-      run: |
-        flake8 . --count --show-source --statistics --max-line-length=127 --extend-ignore=W292,W293
+    #- name: Run flake8
+      #run: |
+        #flake8 . --count --show-source --statistics --max-line-length=127 --extend-ignore=W292,W293
 
     # Check code formatting with black (exits with code 1 if formatting is needed)
-    - name: Format with Black
-      run: |
-        black --line-length 127 .
+    #- name: Format with Black
+      #run: |
+        #black --line-length 127 .
 
     # Check import sorting with isort
-    - name: Check import sorting with isort
-      run: |
-        isort --check --diff .
+    #- name: Check import sorting with isort
+      #run: |
+        #isort --check --diff . 

@@ -1,43 +1,93 @@
 name: CI - Python Tests
 
-# Controls when the workflow will run
 on:
-  # Trigger on any push to any branch
   push:
     branches: [ "**" ]
-  # Also trigger on any pull request to the main branch
   pull_request:
     branches: [ "main" ]
 
-# A workflow run is made up of one or more jobs
-jobs:
-  # We have a single job called "test"
-  test:
-    # A friendly name for the job
-    name: Run Python Tests
+# A new section to define variables that can be used across the workflow
+env:
+  # The dependency file we want to use for caching and installation
+  DEPENDENCY_FILE: requirements-test.txt
 
-    # The type of runner that the job will run on
+jobs:
+  test:
+    # We'll now use a matrix, so the name can include the version
+    name: Test Python ${{ matrix.python-version }}
+
+    # The magic of parallelism and cross-version testing
+    strategy:
+      matrix:
+        # Define the Python versions you want to test against
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        # You could also add an OS matrix here later, e.g., os: [ubuntu-latest, windows-latest]
+
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Step 1: Checkout the code from the repository
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # Step 2: Set up a specific version of Python
-    - name: Set up Python 3.10
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    # --- NEW STEP: CACHE DEPENDENCIES ---
+    - name: Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        # Path to the directory where pip stores its cache
+        path: ~/.cache/pip
+        # The key for the cache. It's unique per runner OS, Python version, and dependency file hash.
+        # If the dependency file changes, the cache will be rebuilt.
+        key: >-
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles(env.DEPENDENCY_FILE) }}
+        # A list of partial keys to use for finding a cache if the exact key doesn't exist.
+        # This will restore a cache from a different Python version if necessary, which is better than nothing.
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r ${{ env.DEPENDENCY_FILE }}
+
+    - name: Run tests
+      run: |
+        pytest -v
+
+  # --- NEW JOB: LINTING ---
+  # This job runs in parallel with the 'test' job because it has no 'needs' dependency
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: "3.10"
 
-    # Step 3: Install dependencies
-    - name: Install dependencies
+    - name: Install linters
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements-test.txt
+        pip install flake8 black isort
 
-    # Step 4: Run the test suite with pytest
-    - name: Run tests
+    # Check for PEP8 violations with flake8
+    - name: Run flake8
       run: |
-        pytest -v
+        flake8 . --count --show-source --statistics --max-line-length=127
+
+    # Check code formatting with black (exits with code 1 if formatting is needed)
+    - name: Check formatting with black
+      run: |
+        black --check --diff --line-length 127 .
+
+    # Check import sorting with isort
+    - name: Check import sorting with isort
+      run: |
+        isort --check --diff .

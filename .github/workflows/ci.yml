@@ -1,0 +1,43 @@
+name: CI - Python Tests
+
+# Controls when the workflow will run
+on:
+  # Trigger on any push to any branch
+  push:
+    branches: [ "**" ]
+  # Also trigger on any pull request to the main branch
+  pull_request:
+    branches: [ "main" ]
+
+# A workflow run is made up of one or more jobs
+jobs:
+  # We have a single job called "test"
+  test:
+    # A friendly name for the job
+    name: Run Python Tests
+
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Step 1: Checkout the code from the repository
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Step 2: Set up a specific version of Python
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+
+    # Step 3: Install dependencies
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-test.txt
+
+    # Step 4: Run the test suite with pytest
+    - name: Run tests
+      run: |
+        pytest -v

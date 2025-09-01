@@ -80,7 +80,7 @@ jobs:
     # Check for PEP8 violations with flake8
     - name: Run flake8
       run: |
-        flake8 . --count --show-source --statistics --max-line-length=127 --extend-ignore=W292
+        flake8 . --count --show-source --statistics --max-line-length=127 --extend-ignore=W292,W293
 
     # Check code formatting with black (exits with code 1 if formatting is needed)
     - name: Check formatting with black

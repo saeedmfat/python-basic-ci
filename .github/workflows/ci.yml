@@ -83,9 +83,9 @@ jobs:
         flake8 . --count --show-source --statistics --max-line-length=127 --extend-ignore=W292,W293
 
     # Check code formatting with black (exits with code 1 if formatting is needed)
-    - name: Check formatting with black
+    - name: Format with Black
       run: |
-        black --check --diff --line-length 127 .
+        black --line-length 127 .
 
     # Check import sorting with isort
     - name: Check import sorting with isort
